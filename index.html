@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>Memphis Emissions Map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link href="https://fonts.googleapis.com/css2?family=Loretta&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://cdn.jsdelivr.net/npm/mapbox-gl-globe-minimap@1.2.0/dist/bundle.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/scrollama"></script>
+
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Loretta&display=swap');
+
+        #intro-container {
+            padding: 60px 10vw 40px 10vw;
+            background-color: #f9f9f9;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            z-index: 10;
+        }
+
+        #outro-container {
+            padding: 60px 10vw 40px 10vw;
+            background-color: #f9f9f9;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        #map-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+            /* This ensures the map container takes up the full viewport height */
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            text-align: left;
+        }
+
+        h2 {
+            font-family: 'Fira Sans', sans-serif;
+            text-align: left;
+        }
+
+        #intro-container h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+        }
+
+        #intro-container h2 {
+            font-family: 'Fira Sans', sans-serif;
+            font-size: 1.2em;
+            font-weight: 400;
+            margin-bottom: 1.5em;
+        }
+
+        .content {
+            font-family: 'Fira Sans', sans-serif;
+            font-size: 1.1em;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: left;
+
+        }
+
+        .content p {
+            margin-bottom: 1.6em;
+        }
+
+        .step h3 {
+            font-size: 1.8em;
+            font-family: 'Fira Sans', sans-serif;
+            /* or your desired font */
+            font-weight: 700;
+            /* optional for bold */
+            margin-bottom: 0.5em;
+        }
+
+        .main-description {
+            font-size: 1.5em;
+            font-weight: bold;
+            line-height: 1.6;
+        }
+
+        .more-description {
+            font-size: 1.2em;
+            font-weight: 400;
+            /* lighter than bold */
+            color: #555;
+            /* optional: makes it visually less prominent */
+            line-height: 1.5;
+            margin-top: 0.5em;
+        }
+
+        body {
+
+            margin: 0;
+            padding: 0;
+        }
+
+        #custom-box {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 15px;
+            max-width: 300px;
+            font-size: 14px;
+            z-index: 10;
+            border-radius: 6px;
+            font-family: 'Fira Sans', sans-serif;
+        }
+
+        a,
+        a:hover,
+        a:visited {
+            color: #0071bc;
+        }
+
+        #map {
+            top: 0;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+        }
+
+        #header {
+            margin: auto;
+            width: 100%;
+            position: relative;
+            z-index: 5;
+        }
+
+        #header h1,
+        #header h2,
+        #header p {
+            margin: 0;
+            padding: 2vh 2vw;
+            text-align: center;
+        }
+
+        #footer {
+            width: 100%;
+            min-height: 5vh;
+            padding-top: 2vh;
+            padding-bottom: 2vh;
+            text-align: center;
+            line-height: 25px;
+            font-size: 13px;
+            position: relative;
+            z-index: 5;
+            font-family: 'Fira Sans', sans-serif;
+        }
+
+        #features {
+            padding-top: 10vh;
+            padding-bottom: 10vh;
+        }
+
+        #footer {
+            width: 100%;
+            padding: 40px 10vw;
+            background-color: #f9f9f9;
+            text-align: center;
+            font-size: 13px;
+            z-index: 5;
+            border-top: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+        .hidden {
+            visibility: hidden;
+        }
+
+        .centered {
+            width: 50vw;
+            margin: 0 auto;
+        }
+
+        .lefty {
+            width: 33vw;
+            margin-left: 5vw;
+        }
+
+        .righty {
+            width: 33vw;
+            margin-left: 62vw;
+        }
+
+        .fully {
+            width: 100%;
+            margin: auto;
+        }
+
+        .light {
+            color: #444;
+            background-color: #fafafa;
+        }
+
+        .dark {
+            color: #fafafa;
+            background-color: #444;
+        }
+
+        .step {
+            padding-bottom: 50vh;
+            /* margin-bottom: 10vh; */
+            opacity: 0.25;
+        }
+
+        .step.active {
+            opacity: 0.9;
+        }
+
+        .step div {
+            padding: 25px 50px;
+            line-height: 25px;
+            font-size: 13px;
+            font-family: 'Fira Sans', sans-serif;
+        }
+
+        .step img {
+            width: 100%;
+        }
+
+        .hero-image-container {
+            margin: 0 auto 30px auto;
+            max-width: 900px;
+            /* Matches the content max-width */
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            /* Optional: adds slightly rounded corners */
+        }
+
+        @media (max-width: 750px) {
+
+            .centered,
+            .lefty,
+            .righty,
+            .fully {
+                width: 90vw;
+                margin: 0 auto;
+            }
+        }
+
+        /* Fix issue on mobile browser where scroll breaks  */
+        .mapboxgl-canvas-container.mapboxgl-touch-zoom-rotate.mapboxgl-touch-drag-pan,
+        .mapboxgl-canvas-container.mapboxgl-touch-zoom-rotate.mapboxgl-touch-drag-pan .mapboxgl-canvas {
+            touch-action: unset;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="intro-container">
+        <h1>xAI Is Moving Into a Community Already Saturated By Pollutants</h1>
+        <h2>Locals in Shelby County, Memphis, are staunchly opposing Elon Musk's xAI and its data centers entering their
+            community due to environmental concerns.</h2>
+        <div class="hero-image-container">
+            <img src="./assets/hero-img.jpg" alt="Memphis industrial area with pollution" class="hero-image">
+        </div>
+        <h2>By Hazel Gandhi</h2>
+        <div class="content">
+            <p>
+                Elon Musk-owned xAI began operating a data center called Colossus in Shelby County, Memphis, in June
+                2024 to power its
+                chatbot Grok. Locals and activists have since protested the company's foray into their community,
+                claiming
+                that the data center's emissions are severely harming Shelby County's air quality.
+            </p>
+            <p>
+
+                Roughly 2 miles from xAI's data center is Boxtown, a majority Black community settled by <a
+                    href="https://www.nbcnews.com/news/us-news/musk-xai-colossus-supercomputer-boxtown-memphis-tennessee-rcna206242">formerly
+                    enslaved families</a>. The community believes that after a history of racial injustice, they are now
+                being subjected
+                to
+                climate
+                inequity as well.
+            </p>
+            <p>
+                The gas turbines used by xAI for their data center will directly impact the people of this community and
+                the
+                air they breathe. This is an issue for the locals especially since Shelby County already has the <a
+                    href="https://www.commercialappeal.com/story/news/2021/04/22/air-quality-tns-only-majority-black-county-gets-f-disparities-studied/7326279002/">poorest
+                    levels of air quality</a> in the country, severely high rates of <a
+                    href="https://www.sciencedirect.com/science/article/pii/S1081120623014862#:~:text=Shelby%20County%2C%20Tennessee%20(TN),all%20the%20regions%20in%20TN.">pediatric
+                    asthma</a> and a high-risk exposure to
+                <a
+                    href="https://www.tn.gov/content/dam/tn/health/program-areas/cancer-registry/Cancer-Cluster-Investigation-Shelby%20Co_2024.pdf">cancer</a>
+                because of the emissions of existing industries in the area, according to the Southern Environtal Law
+                Center.
+
+            </p>
+            <p>
+                xAI's turbines are projected to emit 1000-1200 tons of nitrogen oxides per year. While this is far less
+                than
+                the emissions of other industrial sources in the country, this estimate could be underrepresented
+                because a) Colossus is the largest supercomputer being built in the country and b) the estimates do not
+                include all
+                Hazardous Air Pollutants (HAPs) or other carcinogenic emissions. Neither xAI nor
+                the
+                Shelby County Health Department have been transparent about their process for measuring and controlling
+                the
+                emissions of the site.
+            </p>
+            <p>
+                The mainstream media has reported a lot on xAI's move into the community, but there has been very little
+                coverage about the already existing indsutries in the area that are polluting the county's health.
+            </p>
+            <p>An analysis of the National Emissions Inventory released by the EPA reveals that the 10 most
+                pollution-causing facilities collectively emitted 3.5 million tons of pollutants in 2020. These include
+                HAPs that cause birth defects and other health conditions, Criteria Air Pollutants or CAPs including
+                ground-level ozone and carbon monoxide, as well as Greenhouse Gases or GHGs. </p>
+            <p>The TVA's Allen Fossil Plant, which is the largest polluter in the county and accounted for 1.4 million
+                tons of total
+                emissions in 2020 has been operational since 1959. Since then, many others have made their way into this
+                community, but very few receive the same amount of coverage as xAI's data center.</p>
+        </div>
+    </div>
+
+    <div id="map-container">
+        <div id="map"></div>
+        <div id="story"></div>
+        <div id="outro-container">
+            <div class="content">
+                <p>According to the NEI, there are at least 50 other faciliites in Shelby County alone causing severe
+                    pollution in the area.</p>
+                <p>xAI's projected emissions are already in violation of the Clean Air Act, according to the Southern
+                    Environmental Law Center. The group also alleges that the company has illegally obtained exemptions
+                    from
+                    air permits to use its 15 gas turbines.</p>
+                <p>However, some people also believe that xAI might be doing something different for the community. They
+                    announced plans to use a greywater facility to recycle the water they use to cool down their
+                    servers.
+                    Others also believe that a company of this large entering the county would create jobs and benefit
+                    the
+                    commmunity economically. Local activists along with Tennessee State Representative Justin Pearson
+                    continue to advocate against Colossus despite this, citing years of climate racism and injustice.
+                </p>
+            </div>
+            <div id="footer" class="light">
+                <p>Source: EPA's National Emissions Inventory <br>
+                    Created using <a href="https://github.com/mapbox/storytelling" target="_blank">Mapbox
+                        Storytelling</a>
+                    template.
+                </p>
+                <p>You can find the code for this story here and my other work <a
+                        href="https://hazel-gandhi.github.io">here</a>.</p>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="./config.js"></script>
+    <script>
+        var initLoad = true;
+        var layerTypes = {
+            'fill': ['fill-opacity'],
+            'line': ['line-opacity'],
+            'circle': ['circle-opacity', 'circle-stroke-opacity'],
+            'symbol': ['icon-opacity', 'text-opacity'],
+            'raster': ['raster-opacity'],
+            'fill-extrusion': ['fill-extrusion-opacity'],
+            'heatmap': ['heatmap-opacity']
+        }
+
+        var alignments = {
+            'left': 'lefty',
+            'center': 'centered',
+            'right': 'righty',
+            'full': 'fully'
+        }
+
+        function getLayerPaintType(layer) {
+            var layerType = map.getLayer(layer).type;
+            return layerTypes[layerType];
+        }
+
+        function setLayerOpacity(layer) {
+            var paintProps = getLayerPaintType(layer.layer);
+            paintProps.forEach(function (prop) {
+                var options = {};
+                if (layer.duration) {
+                    var transitionProp = prop + "-transition";
+                    options = { "duration": layer.duration };
+                    map.setPaintProperty(layer.layer, transitionProp, options);
+                }
+                map.setPaintProperty(layer.layer, prop, layer.opacity, options);
+            });
+        }
+
+        var story = document.getElementById('story');
+        var features = document.createElement('div');
+        features.setAttribute('id', 'features');
+
+        var header = document.createElement('div');
+
+        if (config.title) {
+            var titleText = document.createElement('h1');
+            titleText.innerText = config.title;
+            header.appendChild(titleText);
+        }
+
+        if (config.subtitle) {
+            var subtitleText = document.createElement('h2');
+            subtitleText.innerText = config.subtitle;
+            header.appendChild(subtitleText);
+        }
+
+        if (config.byline) {
+            var bylineText = document.createElement('p');
+            bylineText.innerText = config.byline;
+            header.appendChild(bylineText);
+        }
+
+        if (header.innerText.length > 0) {
+            header.classList.add(config.theme);
+            header.setAttribute('id', 'header');
+            story.appendChild(header);
+        }
+
+        config.chapters.forEach((record, idx) => {
+            var container = document.createElement('div');
+            var chapter = document.createElement('div');
+
+            if (record.title) {
+                var title = document.createElement('h3');
+                title.innerText = record.title;
+                chapter.appendChild(title);
+            }
+
+            if (record.image) {
+                var image = new Image();
+                image.src = record.image;
+                chapter.appendChild(image);
+            }
+
+            if (record.description) {
+                var story = document.createElement('p');
+                story.innerHTML = record.description;
+                story.classList.add('main-description');
+                chapter.appendChild(story);
+            }
+            if (record.moreDescription) {
+                var more = document.createElement('p');
+                more.innerHTML = record.moreDescription;
+                more.classList.add('more-description');
+                chapter.appendChild(more);
+            }
+
+            container.setAttribute('id', record.id);
+            container.classList.add('step');
+            if (idx === 0) {
+                container.classList.add('active');
+            }
+
+            chapter.classList.add(config.theme);
+            container.appendChild(chapter);
+            container.classList.add(alignments[record.alignment] || 'centered');
+            if (record.hidden) {
+                container.classList.add('hidden');
+            }
+            features.appendChild(container);
+        });
+
+        story.appendChild(features);
+
+        var footer = document.createElement('div');
+
+        // if (config.footer) {
+        //     var footerText = document.createElement('p');
+        //     footerText.innerHTML = config.footer;
+        //     footer.appendChild(footerText);
+        // }
+
+        // if (footer.innerText.length > 0) {
+        //     footer.classList.add(config.theme);
+        //     footer.setAttribute('id', 'footer');
+        //     story.appendChild(footer);
+        // }
+
+        mapboxgl.accessToken = config.accessToken;
+
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: config.style,
+            center: config.chapters[0].location.center,
+            zoom: config.chapters[0].location.zoom,
+            bearing: config.chapters[0].location.bearing,
+            pitch: config.chapters[0].location.pitch,
+            interactive: false,
+            projection: config.projection
+        });
+
+        // Create a inset map if enabled in config.js
+        if (config.inset) {
+            map.addControl(
+                new GlobeMinimap({ ...config.insetOptions }),
+                config.insetPosition
+            );
+        }
+
+        if (config.showMarkers) {
+            var marker = new mapboxgl.Marker({ color: config.markerColor });
+            marker.setLngLat(config.chapters[0].location.center).addTo(map);
+        }
+
+        // instantiate the scrollama
+        var scroller = scrollama();
+
+
+        map.on("load", function () {
+            if (config.use3dTerrain) {
+                map.addSource('mapbox-dem', {
+                    'type': 'raster-dem',
+                    'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                    'tileSize': 512,
+                    'maxzoom': 14
+                });
+                // add the DEM source as a terrain layer with exaggerated height
+                map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+                // add a sky layer that will show when the map is highly pitched
+                map.addLayer({
+                    'id': 'sky',
+                    'type': 'sky',
+                    'paint': {
+                        'sky-type': 'atmosphere',
+                        'sky-atmosphere-sun': [0.0, 0.0],
+                        'sky-atmosphere-sun-intensity': 15
+                    }
+                });
+            };
+
+            // setup the instance, pass callback functions
+            scroller
+                .setup({
+                    step: '.step',
+                    offset: 0.5,
+                    progress: true
+                })
+                .onStepEnter(async response => {
+                    var current_chapter = config.chapters.findIndex(chap => chap.id === response.element.id);
+                    var chapter = config.chapters[current_chapter];
+
+                    response.element.classList.add('active');
+                    map[chapter.mapAnimation || 'flyTo'](chapter.location);
+
+                    if (config.showMarkers) {
+                        marker.setLngLat(chapter.location.center);
+                    }
+                    if (chapter.onChapterEnter.length > 0) {
+                        chapter.onChapterEnter.forEach(setLayerOpacity);
+                    }
+                    if (chapter.callback) {
+                        window[chapter.callback]();
+                    }
+                    if (chapter.rotateAnimation) {
+                        map.once('moveend', () => {
+                            const rotateNumber = map.getBearing();
+                            map.rotateTo(rotateNumber + 180, {
+                                duration: 30000, easing: function (t) {
+                                    return t;
+                                }
+                            });
+                        });
+                    }
+                    if (config.auto) {
+                        var next_chapter = (current_chapter + 1) % config.chapters.length;
+                        map.once('moveend', () => {
+                            document.querySelectorAll('[data-scrollama-index="' + next_chapter.toString() + '"]')[0].scrollIntoView();
+                        });
+                    }
+                })
+                .onStepExit(response => {
+                    var chapter = config.chapters.find(chap => chap.id === response.element.id);
+                    response.element.classList.remove('active');
+                    if (chapter.onChapterExit.length > 0) {
+                        chapter.onChapterExit.forEach(setLayerOpacity);
+                    }
+                });
+
+
+            if (config.auto) {
+                document.querySelectorAll('[data-scrollama-index="0"]')[0].scrollIntoView();
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>
